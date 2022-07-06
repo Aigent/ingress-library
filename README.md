@@ -35,7 +35,7 @@ The library can be found:https://github.com/Aigent/ingress-library/blob/master/j
 
 An example implementation can be found here: 
 
-https://github.com/Aigent/ingress-library/blob/master/js/test.js 
+https://github.com/Aigent/ingress-library/blob/master/js/app.js
 
 The connection is done using websockets.
 
