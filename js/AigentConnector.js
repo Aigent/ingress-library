@@ -64,11 +64,11 @@ export class AigentConnector {
      * @summary method
      * @description open a new audio stream and send metadata
      */
-    startStream() {
+    startStream(certName, keyName) {
         const uri = `${this.url}`;
         this.socket = new WebSocket(uri, {
-            cert: fs.readFileSync("client.crt"),
-            key: fs.readFileSync("client.key"),
+            cert: fs.readFileSync(certName),
+            key: fs.readFileSync(keyName),
             rejectUnauthorized: false,
         });
         // this.socket = new WebSocket(uri);
@@ -166,21 +166,6 @@ export class AigentConnector {
     /**
      * @tag AigentConnector
      * @summary method
-     * @description transmit any leftover data in buffer and close current connection within 3 seconds
-     */
-    close() {
-        clearTimeout(this.dequeueBufferJob);
-        if (this.buffer && this.buffer.length > 0) {
-            this.dequeueBuffer();
-            setTimeout(this.clean, 3000);
-        } else {
-            this.clean();
-        }
-    }
-
-    /**
-     * @tag AigentConnector
-     * @summary method
      * @description close a current connection. Signal end of the stream and clean buffer
      */
     clean() {
@@ -190,6 +175,25 @@ export class AigentConnector {
             delete this.socket;
         }
         delete this.buffer;
+    }
+
+    /**
+     * @tag AigentConnector
+     * @summary method
+     * @description transmit any leftover data in buffer and close current connection within 3 seconds
+     */
+    close() {
+        const self = this;
+        console.log("buffer is", this.buffer);
+        clearTimeout(this.dequeueBufferJob);
+        if (this.buffer && this.buffer.length > 0) {
+            this.dequeueBuffer();
+            setTimeout(function () {
+                self.clean();
+            }, 3000);
+        } else {
+            this.clean();
+        }
     }
 
     /**
@@ -211,11 +215,35 @@ export class AigentConnector {
  * @param {payload} Uint8Array. Data being sent
  * @response Uint8Array encoded message
  */
+
+const timestampArrayLength = 4;
+function generateTimestampArray() {
+    let timestamp = Math.round(new Date().getTime() / 1000); // get unix timestamp in seconds
+    let timestampArray = new Uint8Array(timestampArrayLength);
+    for (var index = 0; index < timestampArray.length; index++) {
+        var byte = timestamp & 0xff;
+        timestampArray[index] = byte;
+        timestamp = (timestamp - byte) / 256;
+    }
+    return timestampArray;
+}
+
+function fromTimestampArrayToNumber(byteArray) {
+    var value = 0;
+    for (var i = byteArray.length - 1; i >= 0; i--) {
+        value = value * 256 + byteArray[i];
+    }
+
+    return value;
+}
+
 function encode(code, payload) {
     const binCode = new Uint8Array([code & 0x00ff, (code & 0xff00) >> 8]);
-    const binMsg = new Uint8Array(binCode.byteLength + payload.byteLength);
+    const binMsg = new Uint8Array(binCode.byteLength + timestampArrayLength + payload.byteLength);
+    const timestampArray = generateTimestampArray();
     binMsg.set(binCode, 0);
-    binMsg.set(payload, binCode.byteLength);
+    binMsg.set(timestampArray, binCode.byteLength);
+    binMsg.set(payload, binCode.byteLength + timestampArrayLength);
     return binMsg;
 }
 
