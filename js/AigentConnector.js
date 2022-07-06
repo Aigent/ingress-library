@@ -74,7 +74,7 @@ export class AigentConnector {
         // this.socket = new WebSocket(uri);
         this.socket.onopen = () => {
             if (this.verbose) {
-                console.log("Connector: opened stream: call id:", this.metadata.voice.callId);
+                console.log("Connector: opened stream: call id:", this.metadata.voice.clientCallId);
             }
             this.isMetaDataSent = this.sendCode(codeMetadata, new TextEncoder().encode(JSON.stringify(this.metadata)));
             this.dequeueBufferTrigger();
