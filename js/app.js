@@ -23,6 +23,7 @@ const metadataTemplate = {
         samplingRate: 8000, // (mandatory field)
         direction: "outbound", // inbound|outbound (inbound is default)
     },
+    agentWindowsUsername: "corp//alex", // (mandatory field)
     clientId: "clientId", // (mandatory field)
     agentId: "agentId", // (mandatory field)
     category: "client-category", // (optional field)
