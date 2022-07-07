@@ -26,6 +26,21 @@ How to obtain a certificate from Aigent:
 
 Email the Certificate Signing Request(CSR) to  help@aigent.ai
 
+In order to create a Certificate Signing Request you can use the following command, this will create a CSR along with a private key
+
+```
+ ./easyrsa init-pki
+ ./easyrsa gen-req EntityName nopass
+```
+
+On our side we will import and sign the request as follows
+
+ `./easyrsa import-req /tmp/path/to/import.req EntityName`
+
+Sign the request as the correct type. This example uses a client type:
+
+ `./easyrsa sign-req client EntityName` 
+
 
 # Library
 
@@ -128,7 +143,7 @@ function generateCallId() {
 ```
 
 
-Otherwise you can use the uuid library instead: https://www.npmjs.com/package/uuid 
+Otherwise you can use the uuid library: https://www.npmjs.com/package/uuid 
 
 
 
