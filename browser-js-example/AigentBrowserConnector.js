@@ -62,8 +62,8 @@ class AigentConnector {
      * @summary method
      * @description open a new audio stream and send metadata
      */
-    startStream(apiToken) {
-        const uri = `${this.url}?aigent-api-token=${apiToken}`;
+    startStream(keycloak_access_token) {
+        const uri = `${this.url}?aigent-api-token=${keycloak_access_token}`;
         try {
             this.socket = new WebSocket(uri);
         } catch (e) {
@@ -246,13 +246,6 @@ function encode(code, payload) {
     return binMsg;
 }
 
-// function encode(code, payload) {
-//     const binCode = new Uint8Array([code & 0x00ff, (code & 0xff00) >> 8]);
-//     const binMsg = new Uint8Array(binCode.byteLength + payload.byteLength);
-//     binMsg.set(binCode, 0);
-//     binMsg.set(payload, binCode.byteLength);
-//     return binMsg;
-// }
 /**
  * @tag AigentConnector
  * @summary generate unique call identifier.

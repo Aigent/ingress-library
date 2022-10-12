@@ -46,9 +46,6 @@ const codeVoice = 2;
  */
 export class AigentConnector {
     constructor(url, metadata, username, password, verbose = false) {
-        // if (!("WebSocket" in window || "MozWebSocket" in window)) {
-        //     throw new Error("Connector: websocket is not supported. Consider to update the browser.");
-        // }
         this.url = url;
         this.metadata = metadata;
         this.verbose = verbose;
@@ -64,14 +61,9 @@ export class AigentConnector {
      * @summary method
      * @description open a new audio stream and send metadata
      */
-    startStream(certName, keyName) {
-        const uri = `${this.url}`;
-        this.socket = new WebSocket(uri, {
-            cert: fs.readFileSync(certName),
-            key: fs.readFileSync(keyName),
-            rejectUnauthorized: false,
-        });
-        // this.socket = new WebSocket(uri);
+    startStream(keycloak_access_token) {
+        const uri = `${this.url}?aigent-api-token=${keycloak_access_token}`;
+        this.socket = new WebSocket(uri);
         this.socket.onopen = () => {
             if (this.verbose) {
                 console.log("Connector: opened stream: call id:", this.metadata.voice.clientCallId);

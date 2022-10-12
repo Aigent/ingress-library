@@ -10,6 +10,7 @@
   "author": "alexandru@aigent.ai",
   "license": "ISC",
   "dependencies": {
+    "axios": "^1.1.2",
     "ws": "^8.8.0"
   }
 }
