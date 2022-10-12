@@ -1,9 +1,17 @@
 import { AigentConnector } from "./AigentConnector.js";
 import fs from "fs";
+import { KeycloakConnector } from "./keycloak.js";
+
+const username = process.env.KEYCLOAK_SERVICE_USERNAME;
+const password = process.env.KEYCLOAK_SERVICE_PASSWORD;
+const token_endpoint = process.env.KEYCLOAK_TOKEN_ENDPOINT;
+
+const keycloak = new KeycloakConnector(username, password, token_endpoint);
+
 const AIGENT_API_URL = process.env.AIGENT_API_URL || "wss://ingress.aigent.ai/connector";
+
 const AUDIO_FILE = process.env.AUDIO_FILE || "audio-file/sentences.g729";
-const CERT_FILE = process.env.CERT_FILE || "certs/client1.crt";
-const CERT_KEY = process.env.CERT_KEY || "certs/client1.key";
+
 function generateCallId() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
         const r = (Math.random() * 16) | 0;
@@ -37,24 +45,44 @@ agentMetadata.voice = { ...metadataTemplate.voice };
 agentMetadata.voice.channel = "agent";
 agentMetadata.voice.clientCallId = callId;
 
+const clientMetadata = { ...metadataTemplate };
+clientMetadata.voice = { ...metadataTemplate.voice };
+clientMetadata.voice.channel = "client";
+clientMetadata.voice.clientCallId = callId;
+
 const audio = fs.readFileSync(AUDIO_FILE);
 
-// let agentStream = new AigentConnector("wss://alex.com/connector", agentMetadata, "", "", true);
 let agentStream = new AigentConnector(AIGENT_API_URL, agentMetadata, "", "", true);
+let clientStream = new AigentConnector(AIGENT_API_URL, clientMetadata, "", "", true);
 
-agentStream.startStream(CERT_FILE, CERT_KEY);
+// Tokens expire so make sure to get a new one before starting the stream
+keycloak
+    .getToken()
+    .then(async token => {
+        agentStream.startStream(token);
+        clientStream.startStream(token);
+        for (let position = 0; position < audio.length; position += 10) {
+            // 10 bytes offset to create g729 10 milliseconds frames, this is to emulate a real call
+            const audioSlice = audio.slice(position, position + 10);
+            agentStream.send(audioSlice);
+            clientStream.send(audioSlice);
+            await pause10Ms();
+        }
 
-// to send data we use
-// data is a byte object
-// agentStream.send(data);
-for (let position = 0; position < audio.length; position += 80) {
-    // 80 bytes offset to create frames
-    const audioSlice = audio.slice(position, position + 80);
-    agentStream.send(audioSlice);
+        // close ends the connection and the call from the aigent POV
+        setTimeout(function () {
+            agentStream.close();
+            clientStream.close();
+        }, 5000);
+        // end the call after 30 seconds to make sure the data is sent through the websocket
+    })
+    .catch(err => {
+        console.log("error while getting keycloak token", err);
+    });
+
+// return promise after 10 ms
+function pause10Ms() {
+    return new Promise(resolve => {
+        setTimeout(resolve, 10);
+    });
 }
-
-// close ends the connection and the call from the aigent POV
-// end the call after 30 seconds to make sure the data is sent through the websocket
-setTimeout(function () {
-    agentStream.close();
-}, 10000);

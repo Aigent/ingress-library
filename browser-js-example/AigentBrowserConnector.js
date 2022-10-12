@@ -1,5 +1,3 @@
-import WebSocket from "ws";
-import fs from "fs";
 /**
  *
  * @tag AigentConnector
@@ -16,14 +14,14 @@ const codeMetadata = 1;
 const codeVoice = 2;
 
 /**
-  * @tag AigentConnector
-  * @summary a class to connect a browser with Aigent.com
-  * @description send audio stream to Aigent cluster via websocket.
-  Make sure your browser is up-to-date and supports both: MediaStream and
-  Websocket.
-  * @param {url} Aigent cluster address (e.g. http://example.com:8080)
-  * @param {metadata} media stream metadata. Map object type.
-  Example:
+   * @tag AigentConnector
+   * @summary a class to connect a browser with Aigent.com
+   * @description send audio stream to Aigent cluster via websocket.
+   Make sure your browser is up-to-date and supports both: MediaStream and
+   Websocket.
+   * @param {url} Aigent cluster address (e.g. http://example.com:8080)
+   * @param {metadata} media stream metadata. Map object type.
+   Example:
   {
       voice: {
           'channel': 'client', // client|agent (mandatory field)
@@ -39,13 +37,16 @@ const codeVoice = 2;
       'agentAni': 'agent-phone-number', // (optional field)
       'programId': 'program-id', // (optional field)
   }
-  * @param {username} username
-  * @param {password} password
-  * @param {verbose} optional. If true print information to console.log()
-  Default is false
- */
-export class AigentConnector {
+   * @param {username} username
+   * @param {password} password
+   * @param {verbose} optional. If true print information to console.log()
+   Default is false
+  */
+class AigentConnector {
     constructor(url, metadata, username, password, verbose = false) {
+        if (!("WebSocket" in window || "MozWebSocket" in window)) {
+            throw new Error("Connector: websocket is not supported. Consider to update the browser.");
+        }
         this.url = url;
         this.metadata = metadata;
         this.verbose = verbose;
@@ -63,7 +64,13 @@ export class AigentConnector {
      */
     startStream(keycloak_access_token) {
         const uri = `${this.url}?aigent-api-token=${keycloak_access_token}`;
-        this.socket = new WebSocket(uri);
+        try {
+            this.socket = new WebSocket(uri);
+        } catch (e) {
+            console.log("Connector: unable to open socket", e);
+            return;
+        }
+
         this.socket.onopen = () => {
             if (this.verbose) {
                 console.log("Connector: opened stream: call id:", this.metadata.voice.clientCallId);

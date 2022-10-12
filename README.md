@@ -1,12 +1,12 @@
 # Aigent Ingress API 
 
 
-The Aigent api is available at:  wss://ingress.aigent.ai/connector
+The Aigent api is available at: wss://ingress.aigent.ai/connector
 
 
 ### How to run the full example
 
-clone the repository to your local
+clone the repository to your local.
 
 `git clone https://github.com/Aigent/ingress-library.git`
 
@@ -16,31 +16,7 @@ clone the repository to your local
 
 # Requirements
 
-A signed certificate by Aigent.
-
-The private key with which the  CSR Certificate Signing Request was made.
-
-in order to create a certificate you need to run the following command. 
-
-How to obtain a certificate from Aigent:
-
-Email the Certificate Signing Request(CSR) to  help@aigent.ai
-
-In order to create a Certificate Signing Request you can use the following command, this will create a CSR along with a private key
-
-```
- ./easyrsa init-pki
- ./easyrsa gen-req EntityName nopass
-```
-
-On our side we will import and sign the request as follows
-
- `./easyrsa import-req /tmp/path/to/import.req EntityName`
-
-Sign the request as the correct type. This example uses a client type:
-
- `./easyrsa sign-req client EntityName` 
-
+An Aigent Keycloak account that can be requested at help@aigent.ai
 
 # Library
 
@@ -54,12 +30,9 @@ https://github.com/Aigent/ingress-library/blob/master/js/app.js
 
 The connection is done using websockets.
 
-We establish the connection using the certificates for authentication
+We establish the connection using the uri provided, with the token as an url argument
 
-        this.socket = new WebSocket(uri, {
-             cert: fs.readFileSync("client.crt"),
-             key: fs.readFileSync("client.key"),
-        });
+        this.socket = new WebSocket(uri);
 
 
 
@@ -73,7 +46,7 @@ We establish the connection using the certificates for authentication
 
 The data is expected to be in the following format:
 
-an Uint8 array with the following data: `[ code, code, timestamp, timestamp, timestamp, timestamp,  payload…]`
+an `Uint8` array with the following data: `[ code, code, timestamp, timestamp, timestamp, timestamp,  payload…]`
 
 
 ```
@@ -99,7 +72,7 @@ function encode(code, payload) {
 
 ## Timestamp Generation
 
-The timestamp is a unix timestamp, a uint32 integer that we expect as the bytes immediately following the 2 code bytes.
+The timestamp is a unix timestamp, a `uint32` integer that we expect as the bytes immediately following the 2 code bytes.
 
 The timestamp can be generated using the following function:
 
@@ -143,7 +116,7 @@ function generateCallId() {
 ```
 
 
-Otherwise you can use the uuid library: https://www.npmjs.com/package/uuid 
+Alternatively you can use the uuid library: https://www.npmjs.com/package/uuid 
 
 
 

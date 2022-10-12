@@ -2,3 +2,4 @@
 *.key
 node_modules
 package-lock.json
+local_test.sh
